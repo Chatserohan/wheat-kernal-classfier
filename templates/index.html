@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wheat Kernel Classifier</title>
+    <style>
+        /* General reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #d1a6ff, #ffffff); /* Purple to Blue gradient */
+            color: #333;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding-top: 50px; /* Add margin at top to prevent overlap */
+        }
+
+        .container {
+            background: linear-gradient(135deg, #f5f5f5, #ffffff); /* Warm gradient background */
+            border-radius: 15px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1); /* Stronger shadow */
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+            margin: 20px;
+            transition: all 0.3s ease;
+            margin-top: 150px;
+        }
+
+        .container:hover {
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2); /* Darker shadow on hover */
+        }
+
+        h1 {
+            font-size: 2rem; /* Reduce size of title */
+            color: linear-gradient(135deg, #f5f5f5, #ffffff);
+            margin-bottom: 20px;
+            font-weight: 600;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4); /* Add subtle text shadow */
+        }
+
+        .form-group input, .form-group button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 2px solid #2575fc;
+            font-size: 16px;
+            outline: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Input fields shadow */
+        }
+
+        .form-group input:focus, .form-group button:focus {
+            border-color: #feb47b;
+            box-shadow: 0 0 10px rgba(255, 231, 123, 0.7); /* Gradient focus effect */
+        }
+
+        .form-group button {
+            background: linear-gradient(135deg, #00b4d8, #006d77); /* Gradient button background */
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Button shadow */
+        }
+
+        .form-group button:hover {
+            background: linear-gradient(135deg, #006d77, #00b4d8); /* Reverse gradient on hover */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); /* Stronger shadow on hover */
+        }
+
+        .result, .error {
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Shadows for results */
+        }
+
+        .result {
+            background-color: #e7f7f7;
+            border: 1px solid #00b4d8;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        #errorResult {
+            display: none;
+        }
+
+        footer {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Wheat Kernel Classifier</h1>
+
+        <!-- Form to capture input -->
+        <form id="kernelForm">
+            <div class="form-group">
+                <input type="number" step="any" name="c1" id="c1" placeholder="Enter Area of Kernel" required>
+                <input type="number" step="any" name="c2" id="c2" placeholder="Enter Perimeter" required>
+                <input type="number" step="any" name="c3" id="c3" placeholder="Compactness" required>
+                <input type="number" step="any" name="c4" id="c4" placeholder="Length of Kernel" required>
+                <input type="number" step="any" name="c5" id="c5" placeholder="Width of Kernel" required>
+                <input type="number" step="any" name="c6" id="c6" placeholder="Asymmetry Coefficient" required>
+                <input type="number" step="any" name="c7" id="c7" placeholder="Length of Kernel Groove" required>
+            </div>
+            <div class="form-group">
+                <button type="submit">Submit</button>
+                <button type="button" id="clearBtn">Clear</button>
+            </div>
+        </form>
+
+        <!-- Show prediction result -->
+        <div id="predictionResult"></div>
+
+        <!-- Show error message if any -->
+        <div id="errorResult" class="error" style="display:none;"></div>
+        
+        <footer>
+            <p>Project by Rohan Chatse (Data Scientist)</p>
+        </footer>
+    </div>
+
+    <!-- Include JQuery for AJAX -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // When form is submitted
+            $("#kernelForm").submit(function(event) {
+                event.preventDefault();  // Prevent default form submission
+
+                // Get form data
+                var formData = {
+                    'c1': $('#c1').val(),
+                    'c2': $('#c2').val(),
+                    'c3': $('#c3').val(),
+                    'c4': $('#c4').val(),
+                    'c5': $('#c5').val(),
+                    'c6': $('#c6').val(),
+                    'c7': $('#c7').val()
+                };
+
+                // Send form data to Flask route via AJAX
+                $.ajax({
+                    type: "POST",
+                    url: "/",
+                    data: formData,
+                    dataType: "json",
+                    success: function(response) {
+                        // If prediction received, show it
+                        if (response.prediction) {
+                            $('#predictionResult').html('<div class="result"><h3>Predicted Class: ' + response.prediction + '</h3></div>');
+                            $('#errorResult').hide();
+                        }
+                        // If error, show it
+                        if (response.error) {
+                            $('#errorResult').html('<h3>' + response.error + '</h3>').show();
+                            $('#predictionResult').hide();
+                        }
+                    },
+                    error: function() {
+                        alert("There was an error processing your request.");
+                    }
+                });
+            });
+
+            // Clear form values when clear button is clicked
+            $("#clearBtn").click(function() {
+                $('#kernelForm')[0].reset();
+                $('#predictionResult').empty();
+                $('#errorResult').hide();
+            });
+        });
+    </script>
+</body>
+</html>
